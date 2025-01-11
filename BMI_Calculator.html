@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Calculator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #121212;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #ffa500;
+        }
+        label {
+            display: block;
+            font-size: 1.1rem;
+            margin: 10px 0 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #fff;
+            border-radius: 5px;
+            background: #333;
+            color: #fff;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            background: #444;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 1.1rem;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #333;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                margin: 20px auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BMI Calculator</h1>
+        <form id="bmiForm">
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" required placeholder="Enter your age">
+
+            <label for="height">Height (cm):</label>
+            <input type="number" id="height" name="height" required placeholder="Enter your height">
+
+            <label for="weight">Weight (kg):</label>
+            <input type="number" id="weight" name="weight" required placeholder="Enter your weight">
+
+            <button type="button" onclick="calculateBMI()">Calculate BMI</button>
+        </form>
+
+        <div class="result" id="result" style="display: none;">
+            <p>Your BMI is: <span id="bmiValue"></span></p>
+            <p>Suggestion: <span id="bmiSuggestion"></span></p>
+        </div>
+    </div>
+
+    <footer>
+        Developed by Madhavan
+    </footer>
+
+    <script>
+        function calculateBMI() {
+            const age = document.getElementById('age').value;
+            const height = document.getElementById('height').value;
+            const weight = document.getElementById('weight').value;
+
+            if (!age || !height || !weight) {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            const heightInMeters = height / 100;
+            const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(2);
+
+            document.getElementById('bmiValue').textContent = bmi;
+
+            let suggestion = '';
+            if (bmi < 18.5) {
+                suggestion = 'Underweight - Eat more nutritious food.';
+            } else if (bmi >= 18.5 && bmi < 24.9) {
+                suggestion = 'Normal weight - Keep it up!';
+            } else if (bmi >= 25 && bmi < 29.9) {
+                suggestion = 'Overweight - Consider exercising regularly.';
+            } else {
+                suggestion = 'Obese - Consult a healthcare provider.';
+            }
+
+            document.getElementById('bmiSuggestion').textContent = suggestion;
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
