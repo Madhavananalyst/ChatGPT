@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mortal‑Lite — Offline Final (With Your Sprites)</title>
+  <style>
+    :root{--bg:#05060a;--panel:#0d1115;--accent:#ff5050;--muted:#9fb0c7;--hud-h:62px}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#030305);color:#e6eef6;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px}
+    .card{width:1000px;max-width:98%;border-radius:14px;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));box-shadow:0 14px 48px rgba(2,6,12,0.7);border:1px solid rgba(255,255,255,0.03)}
+    .hud{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;height:var(--hud-h);gap:10px}
+    .life{flex:1;background:linear-gradient(180deg,#07121a,#0c1419);border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column}
+    .life .label{font-size:12px;color:var(--muted);letter-spacing:1px}
+    .life .bar{height:18px;background:#0b0f12;border-radius:8px;overflow:hidden;margin-top:8px}
+    .life .fill{height:100%;background:linear-gradient(90deg,var(--accent),#b22222);width:100%;box-shadow:inset 0 -6px 24px rgba(0,0,0,0.4)}
+    .center-title{display:flex;flex-direction:column;align-items:center;gap:6px}
+    #roundText{font-weight:800;color:#e9f4ff;letter-spacing:0.6px}
+    #scoreText{color:var(--muted);font-size:13px}
+    .stage-wrap{position:relative;margin-top:12px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
+    canvas{display:block;width:100%;height:auto;background:#07080b}
+    .controls{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:12px}
+    .control-box{background:var(--panel);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02);color:var(--muted);font-size:13px}
+    button{background:linear-gradient(180deg,#1ee9c9,#0bb3a8);color:#022f2d;padding:9px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800}
+    #finish{position:absolute;left:50%;top:72px;transform:translateX(-50%) scale(0.96);font-size:78px;color:#ffdd55;letter-spacing:2px;text-shadow:0 0 20px rgba(255,220,85,0.9);display:none;pointer-events:none}
+    .overlay-msg{position:absolute;left:50%;transform:translateX(-50%);top:16px;color:#e6eef6;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.12));padding:6px 10px;border-radius:8px;font-weight:800}
+    .menu{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(0,0,0,0.55),rgba(0,0,0,0.3));z-index:40}
+    .menu-card{width:640px;background:linear-gradient(180deg,#0b0d10,#07080b);padding:24px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);text-align:center}
+    .menu-card h1{margin:0;color:#ffd86b;font-size:36px;letter-spacing:2px;text-shadow:0 6px 18px rgba(0,0,0,0.6)}
+    .menu-row{display:flex;gap:10px;justify-content:center;margin-top:12px}
+    .menu-btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800;background:#ff6f6f;color:#1b0707}
+    footer{margin-top:12px;color:var(--muted);font-size:12px;text-align:center}
+    @media (max-width:720px){ #finish{font-size:44px;top:56px} .menu-card{width:92%} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="hud">
+        <div class="life" style="max-width:44%">
+          <div class="label">PLAYER</div>
+          <div class="bar"><div id="p1fill" class="fill"></div></div>
+        </div>
+        <div class="center-title"><div id="roundText">Round 1 • First to 2</div><div id="scoreText">P1: 0 — P2: 0</div></div>
+        <div class="life" style="max-width:44%">
+          <div class="label" style="text-align:right">MONSTER</div>
+          <div class="bar"><div id="p2fill" class="fill"></div></div>
+        </div>
+      </div>
+code
+Code
+<div class="stage-wrap">
+    <div class="overlay-msg">W A S D to move • F light • G heavy</div>
+    <canvas id="game" width="980" height="480"></canvas>
+    <div id="finish">FINISH HIM</div>
+
+    <!-- Menu overlay -->
+    <div id="menu" class="menu">
+      <div class="menu-card">
+        <h1>Mortal‑Lite</h1>
+        <div style="color:#cbdff6;margin-top:8px">A mini fighting game — offline build</div>
+        <div class="menu-row">
+          <button id="startBtn" class="menu-btn">Start</button>
+          <button id="diffBtn" class="menu-btn">Difficulty: Hard</button>
+          <button id="quitBtn" class="menu-btn">Quit</button>
+        </div>
+        <div style="margin-top:12px;color:#9fb0c7;font-size:13px">Controls: W A S D — move • F light • G heavy</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-box"><b>Player</b>&nbsp;&nbsp;W A S D • F • G</div>
+    <div class="control-box"><b>Enemy / P2</b>&nbsp;&nbsp;Arrows • L • ;</div>
+    <button id="resetBtn">Reset Match</button>
+  </div>
+
+  <footer>Offline single-file build — using your uploaded sprites & arena. Built by chatGPT.</footer>
+</div>
+  </div>
+<script>
+// --- Embedded image data URIs (from uploaded files) ---
+const HERO_DATA_URI = "D:\Game\Fighthing_Game\hero.png";
+const MONSTER_DATA_URI = "D:\Game\Fighthing_Game\monster.png";
+const ARENA_DATA_URI = "D:\Game\Fighthing_Game\arena.png";
+
+// Safe placeholders: these REPLACE_ tokens will be injected by the assistant runtime when saved into the canvas.
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const p1fill = document.getElementById('p1fill');
+const p2fill = document.getElementById('p2fill');
+const roundText = document.getElementById('roundText');
+const scoreText = document.getElementById('scoreText');
+const finishEl = document.getElementById('finish');
+const menuEl = document.getElementById('menu');
+const startBtn = document.getElementById('startBtn');
+const diffBtn = document.getElementById('diffBtn');
+const quitBtn = document.getElementById('quitBtn');
+const resetBtn = document.getElementById('resetBtn');
+resetBtn.onclick = resetMatch;
+
+let gravity = 0.9; let hitStop = 0; let slowMo = 1;
+let round = 1, roundsToWin = 2, p1Score=0, p2Score=0;
+let aiDifficulty = 'Hard'; // default
+
+// Load images
+const heroImg = new Image(); heroImg.src = HERO_DATA_URI;
+const monsterImg = new Image(); monsterImg.src = MONSTER_DATA_URI;
+const arenaImg = new Image(); arenaImg.src = ARENA_DATA_URI;
+
+// basic wait until images loaded
+let assetsLoaded = 0;
+[heroImg,monsterImg,arenaImg].forEach(img=>img.addEventListener('load',()=>{ assetsLoaded++; if(assetsLoaded===3) initGame(); }));
+
+function initGame(){
+  // slice sprite sheets using assumed layout
+  // assumptions (if sheets differ, use menu adjustments later):
+  // hero: rows = [idle(4), light(6), heavy(8), hit(3), dead(1)] frame size guessed by height/rows
+  // monster: rows = [idle(4), light(6), heavy(8), hit(3), dead(1)]
+
+  function sliceSheet(img, rowFrames){
+    const rows = rowFrames.length;
+    const fh = Math.floor(img.height / rows);
+    const fw = Math.floor(img.width / Math.max(...rowFrames));
+    const out = {};
+    let y=0;
+    for(let r=0;r<rows;r++){
+      const count = rowFrames[r];
+      const frames = [];
+      for(let i=0;i<count;i++){
+        const oc = document.createElement('canvas'); oc.width = fw; oc.height = fh; const c = oc.getContext('2d');
+        c.drawImage(img, i*fw, r*fh, fw, fh, 0,0,fw,fh);
+        frames.push(oc);
+      }
+      y += fh;
+      out[r] = frames;
+    }
+    return {frames:out, frameW:fw, frameH:fh};
+  }
+
+  // guessed layouts
+  const heroLayout = [4,6,8,3,1];
+  const monsterLayout = [4,6,8,3,1];
+
+  const hs = sliceSheet(heroImg, heroLayout);
+  const ms = sliceSheet(monsterImg, monsterLayout);
+
+  // map indices to action names
+  const actionNames = ['idle','light','heavy','hit','dead'];
+  function buildMap(s){ const map = {}; for(let i=0;i<actionNames.length;i++){ map[actionNames[i]] = s.frames[i]; } return map; }
+
+  const heroFrames = buildMap(hs);
+  const monsterFrames = buildMap(ms);
+
+  // Fighter class (uses frames like earlier)
+  class Fighter{
+    constructor(x, frames, opts={}){
+      this.x=x; this.y=H-150; this.w=opts.w||48; this.h=opts.h||96; this.vx=0; this.vy=0; this.speed=opts.speed||3.2; this.onGround=true; this.health=100; this.facing=1; this.frames=frames; this.action='idle'; this.frameIndex=0; this.frameTimer=0; this.controls={}; this.attackCooldown=0; this.hitbox=null; this.stun=0; this.isKO=false; this.scale=opts.scale||1; this.name=opts.name||'';
+    }
+    setAction(a){ if(this.action!==a){ this.action=a; this.frameIndex=0; this.frameTimer=0; } }
+    update(){ if(this.isKO) return; if(this.stun>0) this.stun--; if(this.attackCooldown>0) this.attackCooldown--; if(hitStop>0) return;
+      if(this.stun<=0){ if(this.controls.left) this.vx=-this.speed; else if(this.controls.right) this.vx=this.speed; else this.vx=0; if(this.controls.up && this.onGround){ this.vy=-12; this.onGround=false; }} else { this.vx*=0.92; }
+      this.vy+=gravity; this.x+=this.vx; this.y+=this.vy; if(this.y+this.h>=H-24){ this.y=H-24-this.h; this.vy=0; this.onGround=true; }
+      this.x = Math.max(6, Math.min(this.x, W-this.w-6)); if(opponentOf(this).x>this.x) this.facing=1; else this.facing=-1;
+      this.hitbox=null; if(this.controls.light && this.attackCooldown===0 && this.stun<=0){ this.attackCooldown=26; this.setAction('light'); this.hitbox=this.makeHitbox(40,18,9); }
+      if(this.controls.heavy && this.attackCooldown===0 && this.stun<=0){ this.attackCooldown=46; this.setAction('heavy'); this.hitbox=this.makeHitbox(68,28,15); }
+      if(this.isHit) this.setAction('hit');
+      const list = this.frames[this.action] || this.frames.idle; this.frameTimer++; if(this.frameTimer>6){ this.frameTimer=0; this.frameIndex=(this.frameIndex+1)%list.length; }
+      this.health = Math.max(0, Math.min(100, this.health));
+    }
+    makeHitbox(range,height,damage){ const hx = this.facing===1? this.x+this.w : this.x-range; const hy=this.y+this.h/2-height/2; return {x:hx,y:hy,w:range,h:height,damage:damage,source:this}; }
+    receiveHit(hit){ if(this.isKO) return; this.health-=hit.damage; this.isHit=true; this.stun = 8+Math.floor(hit.damage/2); this.vx = (hit.source.facing)*-(hit.damage/3); this.vy=-6; setTimeout(()=>{ this.isHit=false; },120); hitStop = Math.min(14,4+Math.floor(hit.damage/2)); playHit(hit.damage>10?'heavy':'light'); if(this.health<=0){ this.isKO=true; playKO(); }
+    }
+    draw(){ const list = this.frames[this.action] || this.frames.idle; const f = list[this.frameIndex%list.length]; const drawX = Math.round(this.x - (f.width - this.w)/2); const drawY = Math.round(this.y - (f.height - this.h)); ctx.save(); if(this.facing===-1){ ctx.translate(drawX+f.width,0); ctx.scale(-1,1); ctx.drawImage(f,0,drawY); } else { ctx.drawImage(f,drawX,drawY); } ctx.restore(); if(this.hitbox){ ctx.globalAlpha=0.16; ctx.fillStyle='#ffd54f'; ctx.fillRect(this.hitbox.x,this.hitbox.y,this.hitbox.w,this.hitbox.h); ctx.globalAlpha=1; }
+    }
+  }
+
+  // instantiate fighters using sliced frames
+  const p1 = new Fighter(140, heroFrames, {scale:1,name:'hero',speed:3.8,w:hs.frameW,h:hs.frameH});
+  const p2 = new Fighter(W-220, monsterFrames, {scale:1.2,name:'monster',speed:2.1,w:ms.frameW,h:ms.frameH});
+
+  window.__MK = {p1,p2}; // expose for debug
+
+  // input
+  const keyState={}; window.addEventListener('keydown', e=>{ if(e.key.length===1) e.key=e.key.toLowerCase(); keyState[e.key]=true; updateControls(); if(['f','g',';','l'].includes(e.key) || e.key.startsWith('Arrow')) e.preventDefault(); }); window.addEventListener('keyup', e=>{ if(e.key.length===1) e.key=e.key.toLowerCase(); keyState[e.key]=false; updateControls(); if(['f','g',';','l'].includes(e.key) || e.key.startsWith('Arrow')) e.preventDefault(); }); function updateControls(){ p1.controls.left=!!keyState['a']; p1.controls.right=!!keyState['d']; p1.controls.up=!!keyState['w']; p1.controls.light=!!keyState['f']; p1.controls.heavy=!!keyState['g']; p2.controls.left=!!keyState['arrowleft']; p2.controls.right=!!keyState['arrowright']; p2.controls.up=!!keyState['arrowup']; p2.controls.light=!!keyState['l']; p2.controls.heavy=!!keyState[';']; }
+
+  // AI with difficulty levels
+  let useAI=true; let aiTimer=0; function setAIDifficulty(d){ aiDifficulty=d; }
+  function enemyAI(){ if(!useAI || p2.isKO) return; aiTimer--; const dx = p1.x - p2.x; const dist = Math.abs(dx);
+    // difficulty params
+    const params = {Easy:{react:80,aggress:0.25,speed:1.6},Medium:{react:42,aggress:0.5,speed:2.0},Hard:{react:18,aggress:0.78,speed:2.4}};
+    const P = params[aiDifficulty]||params.Medium; if(aiTimer<=0){ aiTimer = P.react + Math.floor(Math.random()*P.react);
+      // movement
+      if(dist>260){ p2.controls.left = p2.x > p1.x; p2.controls.right = p2.x < p1.x; }
+      else if(dist<140){ // attack zone
+        if(Math.random()<P.aggress){ if(Math.random()<0.68) { p2.controls.light=true; p2.controls.heavy=false; } else { p2.controls.heavy=true; p2.controls.light=false; } } else { // retreat or block
+          if(Math.random()<0.5) { p2.controls.left = dx < -10; p2.controls.right = dx > 10; } else { p2.controls.light=false; p2.controls.heavy=false; }
+        }
+      } else { p2.controls.left = dx < -10; p2.controls.right = dx > 10; p2.controls.light=false; p2.controls.heavy=false; }
+    } else {
+      // occasional jump/dodge
+      if(Math.random()<0.012*(aiDifficulty==='Hard'?2:1) && p2.onGround) p2.controls.up=true; else p2.controls.up=false;
+      if(Math.random()<0.18) { p2.controls.light=false; p2.controls.heavy=false; }
+    }
+  }
+
+  // collisions
+  function intersects(a,b){ return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+
+  // audio (simple synths)
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); function playHit(kind='light'){ const now = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type = kind==='heavy' ? 'square' : 'triangle'; o.frequency.setValueAtTime(kind==='heavy'?120:340,now); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(kind==='heavy'?0.9:0.7,now+0.01); g.gain.exponentialRampToValueAtTime(0.001,now+0.18); o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+0.24); } function playKO(){ const now = audioCtx.currentTime; const o = audioCtx.createOscillator(); const g = audioCtx.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(70,now); g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(1,now+0.03); g.gain.exponentialRampToValueAtTime(0.0001,now+1.1); o.connect(g); g.connect(audioCtx.destination); o.start(now); o.stop(now+1.12); }
+
+  // rounds
+  let roundOver=false, roundOverTimer=0;
+  function startRound(){ roundOver=false; roundOverTimer=0; p1.x=140; p2.x=W-220; p1.y=p2.y=H-150; p1.health=100; p2.health=100; p1.vx=p2.vx=p1.vy=p2.vy=0; p1.stun=p2.stun=0; p1.isKO=p2.isKO=false; roundText.textContent = `Round ${round} • First to ${roundsToWin}`; updateFillBars(); finishEl.style.display='none'; }
+  function endRound(winner){ roundOver=true; roundOverTimer=140; if(winner===p1) p1Score++; else p2Score++; scoreText.textContent = `P1: ${p1Score} — P2: ${p2Score}`; if(p1Score>=roundsToWin || p2Score>=roundsToWin){ setTimeout(()=>{ alert((p1Score>p2Score? 'Player wins the match!' : 'Monster wins the match!')); resetMatch(); }, 500); } else { round++; setTimeout(()=> startRound(), 900); } }
+  function resetMatch(){ round=1; p1Score=0; p2Score=0; scoreText.textContent = `P1: ${p1Score} — P2: ${p2Score}`; startRound(); } function updateFillBars(){ p1fill.style.width = p1.health + '%'; p2fill.style.width = p2.health + '%'; }
+
+  // draw stage
+  function drawStage(t){ ctx.drawImage(arenaImg,0,0,W,H); ctx.globalAlpha=0.08; ctx.fillStyle='#ffffff'; ctx.fillRect((t/30)%W, H-160, 120, 24); ctx.globalAlpha=1; }
+
+  // finish him
+  let finishShown=false; function checkFinish(){ if(!finishShown && !p2.isKO && p2.health>0 && p2.health<=8){ finishShown=true; finishEl.style.display='block'; finishEl.style.transform='translateX(-50%) scale(1)'; finishEl.style.opacity='1'; slowMo=0.32; setTimeout(()=>{ finishEl.style.display='none'; slowMo=1; finishShown=false; },2400); } }
+
+  // main loop
+  let last = performance.now(); function loop(now){ const dt = (now-last); last=now; if(!roundOver){ if(hitStop>0){ hitStop--; } else { p1.update(); if(useAI) enemyAI(); p2.update(); } for(const attacker of [p1,p2]){ const hb = attacker.hitbox; if(hb){ const target = opponentOf(attacker); if(intersects(hb,{x:target.x,y:target.y,w:target.w,h:target.h})){ target.receiveHit(hb); attacker.hitbox=null; hitStop = Math.max(hitStop,6); if(target.health<=0){ endRound(attacker===p1? p1 : p2); } } } } checkFinish(); } else { roundOverTimer--; if(roundOverTimer<=0) roundOver=false; }
+    ctx.clearRect(0,0,W,H); drawStage(performance.now()); ctx.save(); ctx.globalAlpha=0.7; ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(p1.x-18,H-50,96,10); ctx.fillRect(p2.x-60,H-50,180,12); ctx.restore(); p1.draw(); p2.draw(); updateFillBars(); requestAnimationFrame(loop); }
+
+  startRound(); loop(performance.now());
+
+  // menu handlers
+  startBtn.onclick = ()=>{ menuEl.style.display='none'; };
+  let diffs = ['Easy','Medium','Hard']; let didx=2; diffBtn.onclick = ()=>{ didx=(didx+1)%3; aiDifficulty=diffs[didx]; diffBtn.textContent = 'Difficulty: '+aiDifficulty; };
+  quitBtn.onclick = ()=>{ window.close(); };
+
+} // end initGame
+
+</script>
+</body>
+</html>
